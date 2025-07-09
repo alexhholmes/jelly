@@ -9,6 +9,7 @@ import (
 
 	"jelly/pkg/api/gen"
 	"jelly/pkg/api/util"
+	"jelly/pkg/config"
 	"jelly/pkg/pgdb"
 )
 
@@ -22,8 +23,9 @@ type PhotoHandler struct {
 func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	logger := r.Context().Value(util.ContextLogger).(*slog.Logger)
 
-	// Parse multipart form
-	err := r.ParseMultipartForm(10 << 20) // 10MB limit
+	// Parse multipart form using configured max file size
+	maxFileSize := config.GetPhotoMaxFileSizeBytes()
+	err := r.ParseMultipartForm(maxFileSize)
 	if err != nil {
 		logger.Error("Failed to parse multipart form", "error", err)
 		http.Error(w, util.ErrMsgFailedToParseForm, http.StatusBadRequest)

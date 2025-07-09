@@ -8,6 +8,7 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -16,6 +17,17 @@ import (
 )
 
 func TestPhotoHandler_UploadPhoto_Success(t *testing.T) {
+	// Set test environment variable for max file size
+	originalEnv := os.Getenv("PHOTO_MAX_FILE_SIZE_MB")
+	os.Setenv("PHOTO_MAX_FILE_SIZE_MB", "10")
+	defer func() {
+		if originalEnv == "" {
+			os.Unsetenv("PHOTO_MAX_FILE_SIZE_MB")
+		} else {
+			os.Setenv("PHOTO_MAX_FILE_SIZE_MB", originalEnv)
+		}
+	}()
+	
 	handler := PhotoHandler{}
 
 	// Create multipart form data

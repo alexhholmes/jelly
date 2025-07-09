@@ -1,0 +1,27 @@
+# Jelly Photo Sharing API Configuration
+# This file provides default configuration values that can be overridden by environment variables
+
+# Photo upload settings
+photo:
+  max_file_size_mb: 10  # Maximum file size in MB (can be overridden by PHOTO_MAX_FILE_SIZE_MB env var)
+
+# Database settings
+database:
+  host: localhost
+  port: 5432
+  name: jelly
+  user: username
+  password: password
+
+# Server settings
+server:
+  port: 8080
+  read_timeout: 30s
+  write_timeout: 30s
+
+# Storage settings
+storage:
+  type: local  # local, s3
+  local_path: ./uploads
+  s3_bucket: jelly-photos
+  s3_region: us-east-1
