@@ -1,0 +1,177 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: A photo sharing social media API
+  license:
+    name: Apache 2.0
+    url: https://www.apache.org/licenses/LICENSE-2.0.html
+servers:
+  - url: http://localhost:8080/
+    description: Localhost server
+    variables:
+      port:
+        enum:
+          - "8080"
+          - "6060" # Go pprof (enabled when ENVIRONMENT=DEV)
+        default: "8080"
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      description: Check API health status
+      security: [ ]
+      responses:
+        '200':
+          description: API healthcheck
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthCheck'
+  /photo:
+    post:
+      operationId: uploadPhoto
+      description: Uploads a photo and returns the photo ID for creation of a post.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The photo file to upload
+                caption:
+                  type: string
+                  maxLength: 500
+                  description: Optional caption for the photo
+                tags:
+                  type: array
+                  items:
+                    type: string
+                  maxItems: 10
+                  description: Optional tags for the photo
+      responses:
+        '200':
+          description: Photo uploaded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoUploadResponse'
+        '400':
+          $ref: '#/components/responses/bad-request'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '500':
+          $ref: '#/components/responses/internal-error'
+components:
+  responses:
+    bad-request:
+      description: 400 BAD REQUEST
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/BadRequest'
+    forbidden:
+      description: 403 FORBIDDEN
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Forbidden'
+    not-found:
+      description: 404 NOT FOUND
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NotFound'
+    internal-error:
+      description: 500 INTERNAL SERVER ERROR
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+  schemas:
+    HealthCheck:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          example: ok
+    BadRequest:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: bad request
+    Forbidden:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: forbidden, newsletter is hidden by author
+    NotFound:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: not found
+    InternalServerError:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          example: internal server error
+    Photo:
+      type: object
+      required:
+        - id
+        - url
+        - uploadedAt
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the photo
+          example: photo_123456
+        url:
+          type: string
+          format: uri
+          description: URL to access the uploaded photo
+          example: https://example.com/photos/photo_123456.jpg
+        caption:
+          type: string
+          description: Photo caption
+          example: Beautiful sunset
+        tags:
+          type: array
+          items:
+            type: string
+          description: Photo tags
+          example: ["sunset", "nature"]
+        uploadedAt:
+          type: string
+          format: date-time
+          description: Timestamp when photo was uploaded
+          example: 2024-01-01T12:00:00Z
+    PhotoUploadResponse:
+      type: object
+      required:
+        - photo
+      properties:
+        photo:
+          $ref: '#/components/schemas/Photo'
+        message:
+          type: string
+          example: Photo uploaded successfully

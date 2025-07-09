@@ -1,0 +1,44 @@
+version: '3'
+
+tasks:
+  build:
+    deps: [gen]
+    cmds:
+      - go build -mod=mod -o bin/jelly cmd/main.go
+
+  gen:
+    cmds:
+      - oapi-codegen --config=config/oapi-codegen.yaml config/api.yaml
+#      - mockery --config=config/mockery.yaml
+
+  test:
+    deps: [gen]
+    cmds:
+      - go test ./...
+
+  test-verbose:
+    deps: [gen]
+    cmds:
+      - go test -v ./...
+
+  test-cov:
+    deps: [gen]
+    cmds:
+      - go test -cover ./...
+
+  test-cov-out:
+    deps: [gen, clean]
+    cmds:
+      - go test -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out
+
+  run-local:
+    deps: [build]
+    env:
+      ENVIRONMENT: local
+    cmds:
+      - ./bin/jelly
+
+  clean:
+    cmds:
+      - rm -rf bin coverage.out
