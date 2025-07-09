@@ -1,0 +1,41 @@
+package model
+
+import (
+	"time"
+)
+
+// RawPhoto represents the original unprocessed photo data
+type RawPhoto struct {
+	ID               string     `json:"id" db:"id"`
+	UserID           string     `json:"user_id" db:"user_id"`
+	OriginalFilename string     `json:"original_filename" db:"original_filename"`
+	StorageURL       string     `json:"storage_url" db:"storage_url"`
+	FileSize         int64      `json:"file_size" db:"file_size"`
+	MimeType         string     `json:"mime_type" db:"mime_type"`
+	MD5Hash          string     `json:"md5_hash" db:"md5_hash"`
+	Width            *int       `json:"width,omitempty" db:"width"`
+	Height           *int       `json:"height,omitempty" db:"height"`
+	ExifData         *string    `json:"exif_data,omitempty" db:"exif_data"`
+	UploadedAt       time.Time  `json:"uploaded_at" db:"uploaded_at"`
+	ProcessedAt      *time.Time `json:"processed_at,omitempty" db:"processed_at"`
+	ScheduleDeletion *time.Time `json:"schedule_deletion,omitempty" db:"schedule_deletion"`
+}
+
+// Photo represents a photo in the database
+type Photo struct {
+	ID               string     `json:"id" db:"id"`
+	RawPhotoID       string     `json:"raw_photo_id" db:"raw_photo_id"`
+	UserID           string     `json:"user_id" db:"user_id"`
+	Filename         string     `json:"filename" db:"filename"`
+	OriginalURL      string     `json:"original_url" db:"original_url"`
+	ThumbnailURL     string     `json:"thumbnail_url" db:"thumbnail_url"`
+	Caption          *string    `json:"caption,omitempty" db:"caption"`
+	Tags             []string   `json:"tags,omitempty" db:"tags"`
+	FileSize         int64      `json:"file_size" db:"file_size"`
+	MimeType         string     `json:"mime_type" db:"mime_type"`
+	Width            *int       `json:"width,omitempty" db:"width"`
+	Height           *int       `json:"height,omitempty" db:"height"`
+	UploadedAt       time.Time  `json:"uploaded_at" db:"uploaded_at"`
+	UpdatedAt        time.Time  `json:"updated_at" db:"updated_at"`
+	ScheduleDeletion *time.Time `json:"schedule_deletion,omitempty" db:"schedule_deletion"`
+}

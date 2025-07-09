@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"jelly/pkg/api"
+	"jelly/pkg/config"
 )
 
 func main() {
@@ -22,8 +23,14 @@ func main() {
 		}()
 	}
 
-	err := api.Run()
+	// Load configurations and initialize the API server
+	_, err := config.Load()
 	if err != nil {
-		os.Exit(1)
+		log.Fatal(err)
+	}
+
+	err = api.Run()
+	if err != nil {
+		log.Fatal(err)
 	}
 }

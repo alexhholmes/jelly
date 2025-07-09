@@ -2,7 +2,9 @@ package util
 
 // HTTP response error messages
 const (
-	ErrMsgFailedToParseForm = "Failed to parse form"
-	ErrMsgFileRequired      = "File is required"
-	ErrMsgFailedToReadFile  = "Failed to read file"
+	ErrMsgFileTooLarge        = "File is too large"
+	ErrMsgFailedToParseForm   = "Failed to parse form"
+	ErrMsgFileRequired        = "File is required"
+	ErrMsgFailedToReadFile    = "Failed to read file"
+	ErrMsgUnsupportedFileType = "Unsupported file type"
 )
