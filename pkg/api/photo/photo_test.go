@@ -125,7 +125,7 @@ func TestPhotoHandler_UploadPhoto_NoFile(t *testing.T) {
 	}
 
 	// Check error message
-	if !strings.Contains(w.Body.String(), "File is required") {
+	if !strings.Contains(w.Body.String(), util.ErrMsgFileRequired) {
 		t.Errorf("Expected error message about file being required, got %s", w.Body.String())
 	}
 }
@@ -153,7 +153,7 @@ func TestPhotoHandler_UploadPhoto_InvalidForm(t *testing.T) {
 	}
 
 	// Check error message
-	if !strings.Contains(w.Body.String(), "Failed to parse form") {
+	if !strings.Contains(w.Body.String(), util.ErrMsgFailedToParseForm) {
 		t.Errorf("Expected error message about parsing form, got %s", w.Body.String())
 	}
 }

@@ -26,7 +26,7 @@ func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(10 << 20) // 10MB limit
 	if err != nil {
 		logger.Error("Failed to parse multipart form", "error", err)
-		http.Error(w, "Failed to parse form", http.StatusBadRequest)
+		http.Error(w, util.ErrMsgFailedToParseForm, http.StatusBadRequest)
 		return
 	}
 
@@ -34,7 +34,7 @@ func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	file, fileHeader, err := r.FormFile("file")
 	if err != nil {
 		logger.Error("Failed to get uploaded file", "error", err)
-		http.Error(w, "File is required", http.StatusBadRequest)
+		http.Error(w, util.ErrMsgFileRequired, http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
@@ -43,7 +43,7 @@ func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	_, err = io.ReadAll(file)
 	if err != nil {
 		logger.Error("Failed to read file", "error", err)
-		http.Error(w, "Failed to read file", http.StatusInternalServerError)
+		http.Error(w, util.ErrMsgFailedToReadFile, http.StatusInternalServerError)
 		return
 	}
 
