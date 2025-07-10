@@ -42,3 +42,9 @@ tasks:
   clean:
     cmds:
       - rm -rf bin coverage.out
+
+  update-docs:
+    desc: Update all documentation submodules in claude/ directory
+    cmds:
+      - git submodule update --init --recursive claude/
+      - git submodule foreach --recursive 'git fetch && git pull origin HEAD || true'

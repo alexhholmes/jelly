@@ -46,6 +46,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Handler functions for endpoints must match the codegen and OpenAPI specification names with public naming schema
 
 ### Documentation
-- Documentation for dependencies is stored in the `claude` folder if it exists
+- Documentation for dependencies is stored in the `claude` folderk if it exists
 - ALWAYS read the README.md file for a list of paths to the relevant docs
 
