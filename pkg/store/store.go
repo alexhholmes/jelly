@@ -21,8 +21,8 @@ type Storage interface {
 	// Upload uploads data to storage and returns the public URL
 	Upload(ctx context.Context, key string, data []byte, contentType string) (string, error)
 
-	// Download retrieves data from storage
-	Download(ctx context.Context, key string) ([]byte, error)
+	// Download retrieves data from storage and returns data with MIME type
+	Download(ctx context.Context, key string) ([]byte, string, error)
 
 	// Delete removes an object from storage
 	Delete(ctx context.Context, key string) error
@@ -30,8 +30,8 @@ type Storage interface {
 	// Exists checks if an object exists in storage
 	Exists(ctx context.Context, key string) (bool, error)
 
-	// GeneratePresignedURL creates a presigned URL for temporary access
-	GeneratePresignedURL(ctx context.Context, key string, expiration time.Duration) (string, error)
+	// GenerateURL creates a presigned URL for temporary access
+	GenerateURL(ctx context.Context, key string, expiration time.Duration) (string, error)
 }
 
 // S3Storage implements Storage interface using Amazon S3
@@ -96,10 +96,10 @@ func (s *S3Storage) Upload(ctx context.Context, key string, data []byte, content
 	return url, nil
 }
 
-// Download retrieves data from S3
-func (s *S3Storage) Download(ctx context.Context, key string) ([]byte, error) {
+// Download retrieves data from S3 and its MIME type
+func (s *S3Storage) Download(ctx context.Context, key string) (data []byte, mimeType string, err error) {
 	if key == "" {
-		return nil, fmt.Errorf("key cannot be empty")
+		return nil, "", fmt.Errorf("key cannot be empty")
 	}
 
 	input := &s3.GetObjectInput{
@@ -109,16 +109,16 @@ func (s *S3Storage) Download(ctx context.Context, key string) ([]byte, error) {
 
 	result, err := s.client.GetObject(ctx, input)
 	if err != nil {
-		return nil, fmt.Errorf("failed to download from S3: %w", err)
+		return nil, "", fmt.Errorf("failed to download from S3: %w", err)
 	}
 	defer result.Body.Close()
 
-	data, err := io.ReadAll(result.Body)
+	data, err = io.ReadAll(result.Body)
 	if err != nil {
-		return nil, fmt.Errorf("failed to read object body: %w", err)
+		return nil, "", fmt.Errorf("failed to read object body: %w", err)
 	}
 
-	return data, nil
+	return data, *result.ContentType, nil
 }
 
 // Delete removes an object from S3
@@ -165,8 +165,8 @@ func (s *S3Storage) Exists(ctx context.Context, key string) (bool, error) {
 	return true, nil
 }
 
-// GeneratePresignedURL creates a presigned URL for temporary access
-func (s *S3Storage) GeneratePresignedURL(ctx context.Context, key string, expiration time.Duration) (string, error) {
+// GenerateURL creates a presigned URL for temporary access
+func (s *S3Storage) GenerateURL(ctx context.Context, key string, expiration time.Duration) (string, error) {
 	if key == "" {
 		return "", fmt.Errorf("key cannot be empty")
 	}

@@ -96,7 +96,7 @@ func (_c *MockStorage_Delete_Call) RunAndReturn(run func(ctx context.Context, ke
 }
 
 // Download provides a mock function for the type MockStorage
-func (_mock *MockStorage) Download(ctx context.Context, key string) ([]byte, error) {
+func (_mock *MockStorage) Download(ctx context.Context, key string) ([]byte, string, error) {
 	ret := _mock.Called(ctx, key)
 
 	if len(ret) == 0 {
@@ -104,8 +104,9 @@ func (_mock *MockStorage) Download(ctx context.Context, key string) ([]byte, err
 	}
 
 	var r0 []byte
-	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(context.Context, string) ([]byte, error)); ok {
+	var r1 string
+	var r2 error
+	if returnFunc, ok := ret.Get(0).(func(context.Context, string) ([]byte, string, error)); ok {
 		return returnFunc(ctx, key)
 	}
 	if returnFunc, ok := ret.Get(0).(func(context.Context, string) []byte); ok {
@@ -115,12 +116,17 @@ func (_mock *MockStorage) Download(ctx context.Context, key string) ([]byte, err
 			r0 = ret.Get(0).([]byte)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(context.Context, string) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(context.Context, string) string); ok {
 		r1 = returnFunc(ctx, key)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(string)
 	}
-	return r0, r1
+	if returnFunc, ok := ret.Get(2).(func(context.Context, string) error); ok {
+		r2 = returnFunc(ctx, key)
+	} else {
+		r2 = ret.Error(2)
+	}
+	return r0, r1, r2
 }
 
 // MockStorage_Download_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'Download'
@@ -153,12 +159,12 @@ func (_c *MockStorage_Download_Call) Run(run func(ctx context.Context, key strin
 	return _c
 }
 
-func (_c *MockStorage_Download_Call) Return(bytes []byte, err error) *MockStorage_Download_Call {
-	_c.Call.Return(bytes, err)
+func (_c *MockStorage_Download_Call) Return(bytes []byte, s string, err error) *MockStorage_Download_Call {
+	_c.Call.Return(bytes, s, err)
 	return _c
 }
 
-func (_c *MockStorage_Download_Call) RunAndReturn(run func(ctx context.Context, key string) ([]byte, error)) *MockStorage_Download_Call {
+func (_c *MockStorage_Download_Call) RunAndReturn(run func(ctx context.Context, key string) ([]byte, string, error)) *MockStorage_Download_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -229,12 +235,12 @@ func (_c *MockStorage_Exists_Call) RunAndReturn(run func(ctx context.Context, ke
 	return _c
 }
 
-// GeneratePresignedURL provides a mock function for the type MockStorage
-func (_mock *MockStorage) GeneratePresignedURL(ctx context.Context, key string, expiration time.Duration) (string, error) {
+// GenerateURL provides a mock function for the type MockStorage
+func (_mock *MockStorage) GenerateURL(ctx context.Context, key string, expiration time.Duration) (string, error) {
 	ret := _mock.Called(ctx, key, expiration)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GeneratePresignedURL")
+		panic("no return value specified for GenerateURL")
 	}
 
 	var r0 string
@@ -255,20 +261,20 @@ func (_mock *MockStorage) GeneratePresignedURL(ctx context.Context, key string, 
 	return r0, r1
 }
 
-// MockStorage_GeneratePresignedURL_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GeneratePresignedURL'
-type MockStorage_GeneratePresignedURL_Call struct {
+// MockStorage_GenerateURL_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GenerateURL'
+type MockStorage_GenerateURL_Call struct {
 	*mock.Call
 }
 
-// GeneratePresignedURL is a helper method to define mock.On call
+// GenerateURL is a helper method to define mock.On call
 //   - ctx context.Context
 //   - key string
 //   - expiration time.Duration
-func (_e *MockStorage_Expecter) GeneratePresignedURL(ctx interface{}, key interface{}, expiration interface{}) *MockStorage_GeneratePresignedURL_Call {
-	return &MockStorage_GeneratePresignedURL_Call{Call: _e.mock.On("GeneratePresignedURL", ctx, key, expiration)}
+func (_e *MockStorage_Expecter) GenerateURL(ctx interface{}, key interface{}, expiration interface{}) *MockStorage_GenerateURL_Call {
+	return &MockStorage_GenerateURL_Call{Call: _e.mock.On("GenerateURL", ctx, key, expiration)}
 }
 
-func (_c *MockStorage_GeneratePresignedURL_Call) Run(run func(ctx context.Context, key string, expiration time.Duration)) *MockStorage_GeneratePresignedURL_Call {
+func (_c *MockStorage_GenerateURL_Call) Run(run func(ctx context.Context, key string, expiration time.Duration)) *MockStorage_GenerateURL_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 context.Context
 		if args[0] != nil {
@@ -291,12 +297,12 @@ func (_c *MockStorage_GeneratePresignedURL_Call) Run(run func(ctx context.Contex
 	return _c
 }
 
-func (_c *MockStorage_GeneratePresignedURL_Call) Return(s string, err error) *MockStorage_GeneratePresignedURL_Call {
+func (_c *MockStorage_GenerateURL_Call) Return(s string, err error) *MockStorage_GenerateURL_Call {
 	_c.Call.Return(s, err)
 	return _c
 }
 
-func (_c *MockStorage_GeneratePresignedURL_Call) RunAndReturn(run func(ctx context.Context, key string, expiration time.Duration) (string, error)) *MockStorage_GeneratePresignedURL_Call {
+func (_c *MockStorage_GenerateURL_Call) RunAndReturn(run func(ctx context.Context, key string, expiration time.Duration) (string, error)) *MockStorage_GenerateURL_Call {
 	_c.Call.Return(run)
 	return _c
 }
