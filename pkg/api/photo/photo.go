@@ -62,14 +62,7 @@ func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// STEP 1: Generate unique IDs and extract metadata from uploaded file
-	// - Create unique ID for raw photo record
-	// - Extract original filename, file size, MIME type
-	// - Calculate MD5 and SHA256 hashes for integrity verification
-	// - Extract image dimensions (width/height) from file headers
-	// - Parse EXIF data if available (camera settings, GPS, etc.)
-	// - Set upload timestamp
-
+	// rawMetadata is for the original unprocessed photo
 	rawMetadata := model.RawPhoto{
 		ID: uuid.New().String(),
 		// UserID:           "",
@@ -99,9 +92,9 @@ func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	// Deferred db and s3 cleanup if any of the upcoming operations fail
 	defer func() {
 		if err != nil {
-			// Write db schedule deletion in 7 days
 			updateMetadata := model.RawPhoto{
-				ScheduleDeletion: util.GetTimePtr(time.Now().Add(7 * 24 * time.Hour)),
+				// TODO add configuration to set deletion schedule
+				ScheduleDeletion: util.GetTimePointer(time.Now().Add(7 * 24 * time.Hour)),
 			}
 			if dbErr := h.DB.UpdateRawPhoto(r.Context(), rawMetadata.ID, updateMetadata); dbErr != nil {
 				logger.Error("Failed to update metadata for scheduled deletion",
@@ -114,49 +107,12 @@ func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	// STEP 2: Upload raw photo to storage
-	// - Upload original file bytes to object storage (S3/local)
-	// - Generate storage URL/path for raw file
-	// - Handle upload errors and retry logic
-
-	// STEP 3: Save raw photo metadata to database
-	// - Create RawPhoto record with all metadata
-	// - Save to database with transaction
-	// - Handle database errors
-
-	// STEP 4: Process the photo for web display
-	// - Resize image to standard web sizes (e.g., 1920x1080 max)
-	// - Apply image optimization (compression, format conversion)
-	// - Strip sensitive EXIF data for privacy
-	// - Generate thumbnail (e.g., 300x300)
-	// - Convert to web-friendly formats (JPEG, WebP)
-
-	// STEP 5: Upload processed images to storage
-	// - Upload processed/optimized image to storage
-	// - Upload thumbnail to storage
-	// - Generate public URLs for both processed and thumbnail
-	// - Handle upload errors
-
-	// STEP 6: Save processed photo metadata to database
-	// - Create Photo record with reference to RawPhoto
-	// - Include user caption and tags
-	// - Store processed image URLs and metadata
-	// - Update RawPhoto.ProcessedAt timestamp
-	// - Save with transaction
-
-	// STEP 7: Return response to client
-	// - Return processed photo metadata (not raw)
-	// - Include public URLs for display
-	// - Include user-provided caption and tags
-
-	// TODO: Implement the above steps
-
 	// Get optional caption and tags
-	// caption := r.FormValue("caption")
-	// var tags []string
-	// if tagValues := r.Form["tags"]; len(tagValues) > 0 {
-	// 	tags = tagValues
-	// }
+	caption := r.FormValue("caption")
+	var tags []string
+	if tagValues := r.Form["tags"]; len(tagValues) > 0 {
+		tags = tagValues
+	}
 
 	// TODO: Save photo metadata to database
 	// err = h.DB.SavePhoto(photoModel)
@@ -168,11 +124,11 @@ func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 
 	// Create response
 	photo := gen.Photo{
-		Id: "",
-		// Url:        photoModel.OriginalURL,
-		// Caption:    photoModel.Caption,
-		// Tags:       &photoModel.Tags,
-		// UploadedAt: photoModel.UploadedAt,
+		Id:         "",
+		Url:        "",
+		Caption:    &caption,
+		Tags:       &tags,
+		UploadedAt: rawMetadata.UploadedAt,
 	}
 
 	resp := gen.PhotoUploadResponse{

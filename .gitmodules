@@ -1,0 +1,3 @@
+[submodule "claude/mockery"]
+	path = claude/mockery
+	url = https://github.com/vektra/mockery

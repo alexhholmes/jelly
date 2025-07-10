@@ -1,10 +1,9 @@
-with-expecter: true
-mockname: "Mock{{.InterfaceName}}"
-filename: "{{.PackageName}}_mock.gen.go"
+structname: "Mock{{.InterfaceName}}"
+filename: "{{.SrcPackageName}}_mock.gen.go"
 dir: "{{.InterfaceDir}}"
-outpkg: "{{.PackageName}}"
+pkgname: "{{.SrcPackageName}}"
 inpackage: True
 packages:
-  mailchump/pkg/api/newsletters:
+  jelly/pkg/store:
     interfaces:
-      NewsletterStore:
+      Storage:
