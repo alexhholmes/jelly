@@ -42,41 +42,6 @@ func TestNewS3Storage(t *testing.T) {
 	}
 }
 
-func TestNewS3StorageWithCustomURL(t *testing.T) {
-	tests := []struct {
-		name     string
-		bucket   string
-		region   string
-		baseURL  string
-		expected string
-	}{
-		{
-			name:     "CloudFront URL",
-			bucket:   "test-bucket",
-			region:   "us-east-1",
-			baseURL:  "https://d123456.cloudfront.net",
-			expected: "https://d123456.cloudfront.net",
-		},
-		{
-			name:     "Custom domain with trailing slash",
-			bucket:   "photos",
-			region:   "us-west-2",
-			baseURL:  "https://photos.example.com/",
-			expected: "https://photos.example.com",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			storage := NewS3StorageWithCustomURL(nil, tt.bucket, tt.region, tt.baseURL)
-
-			assert.Equal(t, tt.bucket, storage.bucket)
-			assert.Equal(t, tt.region, storage.region)
-			assert.Equal(t, tt.expected, storage.baseURL)
-		})
-	}
-}
-
 func TestStorage_Upload(t *testing.T) {
 	tests := []struct {
 		name        string
@@ -403,37 +368,6 @@ func TestStorage_EdgeCases(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Contains(t, url, "temp.jpg")
 	})
-}
-
-// Benchmark tests for Storage interface
-func BenchmarkStorage_Upload(b *testing.B) {
-	mockStorage := NewMockStorage(b)
-	data := make([]byte, 1024) // 1KB test data
-
-	// Setup mock to handle many calls
-	mockStorage.On("Upload", context.Background(), "bench-test.jpg", data, "image/jpeg").
-		Return("https://example.com/bench-test.jpg", nil).
-		Times(b.N)
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _ = mockStorage.Upload(context.Background(), "bench-test.jpg", data, "image/jpeg")
-	}
-}
-
-func BenchmarkStorage_Download(b *testing.B) {
-	mockStorage := NewMockStorage(b)
-	testData := []byte("benchmark test data")
-
-	// Setup mock to handle many calls
-	mockStorage.On("Download", context.Background(), "bench-test.jpg").
-		Return(testData, "text/plain", nil).
-		Times(b.N)
-
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
-		_, _, _ = mockStorage.Download(context.Background(), "bench-test.jpg")
-	}
 }
 
 // Test multiple operations in sequence

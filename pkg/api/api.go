@@ -13,12 +13,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/go-chi/chi/v5/middleware"
 	_ "github.com/lib/pq"
 
-	"jelly/pkg/api/gen"
-	"jelly/pkg/api/healthcheck"
-	"jelly/pkg/api/middleware"
-	"jelly/pkg/api/photo"
+	"jelly/pkg/api/v1/gen"
+	"jelly/pkg/api/v1/healthcheck"
+	"jelly/pkg/api/v1/photo"
+	"jelly/pkg/api/v1/util"
 	"jelly/pkg/pgdb"
 )
 
@@ -76,18 +77,19 @@ func Run() error {
 	// Create a sub-router with the generated OpenAPI spec. Register the API
 	// routes, and strip the `/api` prefix since we don't specify it in the API
 	// spec.
-	h := gen.HandlerWithOptions(
+	h1 := gen.HandlerWithOptions(
 		NewHandler(db), gen.StdHTTPServerOptions{
 			BaseRouter: http.NewServeMux(),
 			Middlewares: []gen.MiddlewareFunc{
-				middleware.Recovery,
-				middleware.LogRequest,
+				util.Recovery,
+				util.LogRequest,
+				middleware.AllowContentEncoding("utf-8"),
 			},
 		},
 	)
-	baseRouter.Handle("/api/", http.StripPrefix("/api", h))
-	baseRouter.Handle("/api/v1/", http.StripPrefix("/api/v1", h))
-	baseRouter.Handle("/healthcheck", h)
+	baseRouter.Handle("/api/", http.StripPrefix("/api", h1))
+	baseRouter.Handle("/api/v1/", http.StripPrefix("/api/v1", h1))
+	baseRouter.Handle("/healthcheck", h1)
 
 	s := &http.Server{
 		Handler: baseRouter,

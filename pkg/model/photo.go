@@ -2,6 +2,8 @@ package model
 
 import (
 	"time"
+
+	"jelly/pkg/api/v1/gen"
 )
 
 // RawPhoto represents the original unprocessed photo data
@@ -21,6 +23,22 @@ type RawPhoto struct {
 	ScheduleDeletion *time.Time `json:"schedule_deletion,omitempty" db:"schedule_deletion"`
 }
 
+func (rp *RawPhoto) ToRawPhotoDetails() gen.RawPhotoDetails {
+	return gen.RawPhotoDetails{
+		Id:               rp.ID,
+		UserId:           rp.UserID,
+		OriginalFilename: rp.OriginalFilename,
+		StorageUrl:       rp.StorageURL,
+		FileSize:         rp.FileSize,
+		MimeType:         rp.MimeType,
+		Md5Hash:          rp.MD5Hash,
+		Width:            rp.Width,
+		Height:           rp.Height,
+		ProcessedAt:      rp.ProcessedAt,
+		UploadedAt:       rp.UploadedAt,
+	}
+}
+
 // Photo represents a photo in the database
 type Photo struct {
 	ID               string     `json:"id" db:"id"`
@@ -38,4 +56,24 @@ type Photo struct {
 	UploadedAt       time.Time  `json:"uploaded_at" db:"uploaded_at"`
 	UpdatedAt        time.Time  `json:"updated_at" db:"updated_at"`
 	ScheduleDeletion *time.Time `json:"schedule_deletion,omitempty" db:"schedule_deletion"`
+}
+
+func (p *Photo) ToPhotoDetails() gen.PhotoDetails {
+	return gen.PhotoDetails{
+		Id:               p.ID,
+		UserId:           p.UserID,
+		Caption:          p.Caption,
+		FileSize:         p.FileSize,
+		Filename:         p.Filename,
+		Height:           p.Height,
+		Width:            p.Width,
+		MimeType:         p.MimeType,
+		OriginalUrl:      p.OriginalURL,
+		ThumbnailUrl:     p.ThumbnailURL,
+		RawPhotoId:       p.RawPhotoID,
+		ScheduleDeletion: p.ScheduleDeletion,
+		Tags:             &p.Tags,
+		UploadedAt:       p.UploadedAt,
+		UpdatedAt:        p.UpdatedAt,
+	}
 }

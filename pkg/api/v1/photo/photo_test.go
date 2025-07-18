@@ -12,8 +12,8 @@ import (
 	"strings"
 	"testing"
 
-	"jelly/pkg/api/gen"
-	"jelly/pkg/api/util"
+	"jelly/pkg/api/v1/gen"
+	util2 "jelly/pkg/api/v1/util"
 )
 
 func TestPhotoHandler_UploadPhoto_Success(t *testing.T) {
@@ -27,7 +27,7 @@ func TestPhotoHandler_UploadPhoto_Success(t *testing.T) {
 			os.Setenv("PHOTO_MAX_FILE_SIZE_MB", originalEnv)
 		}
 	}()
-	
+
 	handler := PhotoHandler{}
 
 	// Create multipart form data
@@ -55,7 +55,7 @@ func TestPhotoHandler_UploadPhoto_Success(t *testing.T) {
 
 	// Add logger to context
 	logger := slog.Default()
-	ctx := context.WithValue(req.Context(), util.ContextLogger, logger)
+	ctx := context.WithValue(req.Context(), util2.ContextLogger, logger)
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -124,7 +124,7 @@ func TestPhotoHandler_UploadPhoto_NoFile(t *testing.T) {
 
 	// Add logger to context
 	logger := slog.Default()
-	ctx := context.WithValue(req.Context(), util.ContextLogger, logger)
+	ctx := context.WithValue(req.Context(), util2.ContextLogger, logger)
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -137,7 +137,7 @@ func TestPhotoHandler_UploadPhoto_NoFile(t *testing.T) {
 	}
 
 	// Check error message
-	if !strings.Contains(w.Body.String(), util.ErrMsgFileRequired) {
+	if !strings.Contains(w.Body.String(), util2.ErrMsgFileRequired) {
 		t.Errorf("Expected error message about file being required, got %s", w.Body.String())
 	}
 }
@@ -152,7 +152,7 @@ func TestPhotoHandler_UploadPhoto_InvalidForm(t *testing.T) {
 
 	// Add logger to context
 	logger := slog.Default()
-	ctx := context.WithValue(req.Context(), util.ContextLogger, logger)
+	ctx := context.WithValue(req.Context(), util2.ContextLogger, logger)
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()
@@ -165,7 +165,7 @@ func TestPhotoHandler_UploadPhoto_InvalidForm(t *testing.T) {
 	}
 
 	// Check error message
-	if !strings.Contains(w.Body.String(), util.ErrMsgFailedToParseForm) {
+	if !strings.Contains(w.Body.String(), util2.ErrMsgFailedToParseForm) {
 		t.Errorf("Expected error message about parsing form, got %s", w.Body.String())
 	}
 }
@@ -213,7 +213,7 @@ func TestPhotoHandler_UploadPhoto_MinimalData(t *testing.T) {
 
 	// Add logger to context
 	logger := slog.Default()
-	ctx := context.WithValue(req.Context(), util.ContextLogger, logger)
+	ctx := context.WithValue(req.Context(), util2.ContextLogger, logger)
 	req = req.WithContext(ctx)
 
 	w := httptest.NewRecorder()

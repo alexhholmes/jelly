@@ -1,0 +1,25 @@
+services:
+  postgres:
+    image: postgres:latest
+    restart: always
+    ports:
+      - "127.0.0.1:5432:5432" # Expose the port so we can connect to it from Datagrip
+    networks:
+      - db-net
+    environment:
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_USER: "username"
+      POSTGRES_DB: "jelly"
+
+  redis:
+    image: redis:latest
+    restart: always
+    ports:
+      - "127.0.0.1:6379:6379" # Expose the port so we can connect to it from Datagrip
+    networks:
+      - db-net
+    command: redis-server --requirepass password --loglevel verbose
+
+networks:
+  db-net:
+    driver: bridge

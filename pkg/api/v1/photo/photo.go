@@ -2,7 +2,6 @@ package photo
 
 import (
 	"errors"
-	"fmt"
 	"io"
 	"log/slog"
 	"mime/multipart"
@@ -11,8 +10,8 @@ import (
 
 	"github.com/google/uuid"
 
-	"jelly/pkg/api/gen"
-	"jelly/pkg/api/util"
+	"jelly/pkg/api/v1/gen"
+	util2 "jelly/pkg/api/v1/util"
 	"jelly/pkg/config"
 	"jelly/pkg/model"
 	"jelly/pkg/pgdb"
@@ -26,7 +25,7 @@ type PhotoHandler struct {
 // UploadPhoto handles photo upload with optional caption and tags and processing.
 // POST /photo
 func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
-	logger := r.Context().Value(util.ContextLogger).(*slog.Logger)
+	logger := r.Context().Value(util2.ContextLogger).(*slog.Logger)
 
 	// Parse multipart form using configured max file size
 	maxFileSize := config.GetPhotoMaxFileSizeBytes()
@@ -37,11 +36,11 @@ func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 			"error", err, "max_size_mb",
 			maxFileSize/(1024*1024), "file_size_mb", r.ContentLength/(1024*1024),
 		)
-		http.Error(w, util.ErrMsgFileTooLarge, http.StatusBadRequest)
+		http.Error(w, util2.ErrMsgFileTooLarge, http.StatusBadRequest)
 		return
 	} else if err != nil {
-		logger.Info("Failed to parse form", "error", err, "max_size_mb")
-		http.Error(w, util.ErrMsgFailedToParseForm, http.StatusBadRequest)
+		logger.Info("Failed to parse form", "error", err, "max_size_mb", maxFileSize/(1024*1024))
+		http.Error(w, util2.ErrMsgFailedToParseForm, http.StatusBadRequest)
 		return
 	}
 
@@ -49,7 +48,7 @@ func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	file, fileHeader, err := r.FormFile("file")
 	if err != nil {
 		logger.Error("Failed to get uploaded file", "error", err)
-		http.Error(w, util.ErrMsgFileRequired, http.StatusBadRequest)
+		http.Error(w, util2.ErrMsgFileRequired, http.StatusBadRequest)
 		return
 	}
 	defer file.Close()
@@ -58,7 +57,7 @@ func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 	bytes, err := io.ReadAll(file)
 	if err != nil {
 		logger.Error("Failed to read file", "error", err)
-		http.Error(w, util.ErrMsgFailedToReadFile, http.StatusInternalServerError)
+		http.Error(w, util2.ErrMsgFailedToReadFile, http.StatusInternalServerError)
 		return
 	}
 
@@ -70,14 +69,14 @@ func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 		StorageURL:       "",
 		FileSize:         fileHeader.Size,
 		MimeType:         http.DetectContentType(bytes),
-		MD5Hash:          util.CalculateMD5(bytes),
+		MD5Hash:          util2.CalculateMD5(bytes),
 		UploadedAt:       time.Now(),
 	}
 
 	// Check if valid image file type
 	if rawMetadata.MimeType != "image/jpeg" && rawMetadata.MimeType != "image/png" {
 		logger.Info("Unsupported file type", "mime_type", rawMetadata.MimeType)
-		http.Error(w, util.ErrMsgUnsupportedFileType, http.StatusBadRequest)
+		http.Error(w, util2.ErrMsgUnsupportedFileType, http.StatusBadRequest)
 		return
 	}
 
@@ -85,25 +84,25 @@ func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 
 	// Process the image, this will also update the rawMetadata with dimensions
 	// and EXIF data if available.
-	processed, err := util.ProcessPhoto(bytes, rawMetadata)
+	// processed, err := util.ProcessPhoto(bytes, rawMetadata)
 
 	// Update rawMetadata with processed data and write to database
 
 	// Deferred db and s3 cleanup if any of the upcoming operations fail
 	defer func() {
 		if err != nil {
-			updateMetadata := model.RawPhoto{
-				// TODO add configuration to set deletion schedule
-				ScheduleDeletion: util.GetTimePointer(time.Now().Add(7 * 24 * time.Hour)),
-			}
-			if dbErr := h.DB.UpdateRawPhoto(r.Context(), rawMetadata.ID, updateMetadata); dbErr != nil {
-				logger.Error("Failed to update metadata for scheduled deletion",
-					"error", dbErr,
-					"raw_photo_id", rawMetadata.ID,
-					"schedule_deletion", updateMetadata.ScheduleDeletion,
-				)
-				return
-			}
+			// updateMetadata := model.RawPhoto{
+			// 	// TODO add configuration to set deletion schedule
+			// 	ScheduleDeletion: util.GetTimePointer(time.Now().Add(7 * 24 * time.Hour)),
+			// }
+			// if dbErr := h.DB.UpdateRawPhoto(r.Context(), rawMetadata.ID, updateMetadata); dbErr != nil {
+			// 	logger.Error("Failed to update metadata for scheduled deletion",
+			// 		"error", dbErr,
+			// 		"raw_photo_id", rawMetadata.ID,
+			// 		"schedule_deletion", updateMetadata.ScheduleDeletion,
+			// 	)
+			// 	return
+			// }
 		}
 	}()
 
@@ -133,10 +132,39 @@ func (h PhotoHandler) UploadPhoto(w http.ResponseWriter, r *http.Request) {
 
 	resp := gen.PhotoUploadResponse{
 		Photo:   photo,
-		Message: util.StringPtr("Photo uploaded successfully"),
+		Message: util2.StringPtr("Photo uploaded successfully"),
 	}
 
 	logger.Info("Photo uploaded", "photo_id", photo.Id, "filename", fileHeader.Filename)
 
-	util.WriteJSONResponse(w, logger, http.StatusOK, resp)
+	util2.WriteJSONResponse(w, logger, http.StatusOK, resp)
+}
+
+func (h PhotoHandler) GetPhoto(w http.ResponseWriter, r *http.Request, id string) {
+	logger := r.Context().Value(util2.ContextLogger).(*slog.Logger)
+
+	// Validate ID
+	if _, err := uuid.Parse(id); err != nil {
+		logger.Info("Invalid photo ID", "error", err, "id", id)
+		http.Error(w, util2.ErrMsgInvalidUUID, http.StatusBadRequest)
+		return
+	}
+
+	// Fetch photo metadata from database
+	photo, err := h.DB.GetPhotoById(r.Context(), id)
+	if err != nil {
+		// TODO
+	}
+
+	if nil == nil {
+		logger.Info("Photo not found", "id", id)
+		util2.WriteJSONResponse(w, logger, http.StatusNotFound, gen.PhotoDetailsResponse{})
+	}
+
+	util2.WriteJSONResponse(w, logger, http.StatusOK, photo.ToPhotoDetails())
+}
+
+func (h PhotoHandler) GetRawPhoto(w http.ResponseWriter, r *http.Request, id string) {
+	// TODO implement me
+	panic("implement me")
 }

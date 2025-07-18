@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/oapi-codegen/runtime"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
@@ -33,6 +34,11 @@ type InternalServerError struct {
 	Message string `json:"message"`
 }
 
+// NotFound defines model for NotFound.
+type NotFound struct {
+	Message string `json:"message"`
+}
+
 // Photo defines model for Photo.
 type Photo struct {
 	// Caption Photo caption
@@ -51,10 +57,112 @@ type Photo struct {
 	Url string `json:"url"`
 }
 
+// PhotoDetails defines model for PhotoDetails.
+type PhotoDetails struct {
+	// Caption Photo caption
+	Caption *string `json:"caption,omitempty"`
+
+	// FileSize File size in bytes
+	FileSize int64 `json:"fileSize"`
+
+	// Filename Processed filename
+	Filename string `json:"filename"`
+
+	// Height Photo height in pixels
+	Height *int `json:"height,omitempty"`
+
+	// Id Unique identifier for the photo
+	Id string `json:"id"`
+
+	// MimeType MIME type of the photo
+	MimeType string `json:"mimeType"`
+
+	// OriginalUrl URL to the original processed photo
+	OriginalUrl string `json:"originalUrl"`
+
+	// RawPhotoId Reference to the raw photo
+	RawPhotoId string `json:"rawPhotoId"`
+
+	// ScheduleDeletion Scheduled deletion timestamp
+	ScheduleDeletion *time.Time `json:"scheduleDeletion,omitempty"`
+
+	// Tags Photo tags
+	Tags *[]string `json:"tags,omitempty"`
+
+	// ThumbnailUrl URL to the thumbnail version
+	ThumbnailUrl string `json:"thumbnailUrl"`
+
+	// UpdatedAt Timestamp when photo was last updated
+	UpdatedAt time.Time `json:"updatedAt"`
+
+	// UploadedAt Timestamp when photo was uploaded
+	UploadedAt time.Time `json:"uploadedAt"`
+
+	// UserId User who uploaded the photo
+	UserId string `json:"userId"`
+
+	// Width Photo width in pixels
+	Width *int `json:"width,omitempty"`
+}
+
+// PhotoDetailsResponse defines model for PhotoDetailsResponse.
+type PhotoDetailsResponse struct {
+	Message *string      `json:"message,omitempty"`
+	Photo   PhotoDetails `json:"photo"`
+}
+
 // PhotoUploadResponse defines model for PhotoUploadResponse.
 type PhotoUploadResponse struct {
 	Message *string `json:"message,omitempty"`
 	Photo   Photo   `json:"photo"`
+}
+
+// RawPhotoDetails defines model for RawPhotoDetails.
+type RawPhotoDetails struct {
+	// ExifData EXIF metadata from the photo
+	ExifData *map[string]interface{} `json:"exifData,omitempty"`
+
+	// FileSize File size in bytes
+	FileSize int64 `json:"fileSize"`
+
+	// Height Photo height in pixels
+	Height *int `json:"height,omitempty"`
+
+	// Id Unique identifier for the raw photo
+	Id string `json:"id"`
+
+	// Md5Hash MD5 hash of the file
+	Md5Hash string `json:"md5Hash"`
+
+	// MimeType MIME type of the photo
+	MimeType string `json:"mimeType"`
+
+	// OriginalFilename Original filename from upload
+	OriginalFilename string `json:"originalFilename"`
+
+	// ProcessedAt Timestamp when photo was processed
+	ProcessedAt *time.Time `json:"processedAt,omitempty"`
+
+	// ScheduleDeletion Scheduled deletion timestamp
+	ScheduleDeletion *time.Time `json:"scheduleDeletion,omitempty"`
+
+	// StorageUrl URL to the raw photo in storage
+	StorageUrl string `json:"storageUrl"`
+
+	// UploadedAt Timestamp when photo was uploaded
+	UploadedAt time.Time `json:"uploadedAt"`
+
+	// UserId User who uploaded the photo
+	UserId string `json:"userId"`
+
+	// Width Photo width in pixels
+	Width *int `json:"width,omitempty"`
+}
+
+// RawPhotoDetailsResponse defines model for RawPhotoDetailsResponse.
+type RawPhotoDetailsResponse struct {
+	Message  *string         `json:"message,omitempty"`
+	RawPhoto RawPhotoDetails `json:"rawPhoto"`
 }
 
 // InternalError defines model for internal-error.
@@ -83,6 +191,12 @@ type ServerInterface interface {
 
 	// (POST /photo)
 	UploadPhoto(w http.ResponseWriter, r *http.Request)
+
+	// (GET /photo/raw/{id})
+	GetRawPhoto(w http.ResponseWriter, r *http.Request, id string)
+
+	// (GET /photo/{id})
+	GetPhoto(w http.ResponseWriter, r *http.Request, id string)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -115,6 +229,58 @@ func (siw *ServerInterfaceWrapper) UploadPhoto(w http.ResponseWriter, r *http.Re
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.UploadPhoto(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetRawPhoto operation middleware
+func (siw *ServerInterfaceWrapper) GetRawPhoto(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", r.PathValue("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRawPhoto(w, r, id)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r.WithContext(ctx))
+}
+
+// GetPhoto operation middleware
+func (siw *ServerInterfaceWrapper) GetPhoto(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var err error
+
+	// ------------- Path parameter "id" -------------
+	var id string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", r.PathValue("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "id", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPhoto(w, r, id)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -240,6 +406,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 
 	m.HandleFunc("GET "+options.BaseURL+"/health", wrapper.HealthCheck)
 	m.HandleFunc("POST "+options.BaseURL+"/photo", wrapper.UploadPhoto)
+	m.HandleFunc("GET "+options.BaseURL+"/photo/raw/{id}", wrapper.GetRawPhoto)
+	m.HandleFunc("GET "+options.BaseURL+"/photo/{id}", wrapper.GetPhoto)
 
 	return m
 }

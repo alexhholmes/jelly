@@ -67,6 +67,60 @@ paths:
           $ref: '#/components/responses/forbidden'
         '500':
           $ref: '#/components/responses/internal-error'
+  /photo/{id}:
+    get:
+      operationId: getPhoto
+      description: Get photo details and metadata by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Photo ID
+          example: photo_123456
+      responses:
+        '200':
+          description: Photo details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoDetailsResponse'
+        '400':
+          $ref: '#/components/responses/bad-request'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/not-found'
+        '500':
+          $ref: '#/components/responses/internal-error'
+  /photo/raw/{id}:
+    get:
+      operationId: getRawPhoto
+      description: Get raw photo details and metadata by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Raw photo ID
+          example: raw_photo_123456
+      responses:
+        '200':
+          description: Raw photo details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RawPhotoDetailsResponse'
+        '400':
+          $ref: '#/components/responses/bad-request'
+        '403':
+          $ref: '#/components/responses/forbidden'
+        '404':
+          $ref: '#/components/responses/not-found'
+        '500':
+          $ref: '#/components/responses/internal-error'
 components:
   responses:
     bad-request:
@@ -175,3 +229,174 @@ components:
         message:
           type: string
           example: Photo uploaded successfully
+    PhotoDetailsResponse:
+      type: object
+      required:
+        - photo
+      properties:
+        photo:
+          $ref: '#/components/schemas/PhotoDetails'
+        message:
+          type: string
+          example: Photo details retrieved successfully
+    RawPhotoDetailsResponse:
+      type: object
+      required:
+        - rawPhoto
+      properties:
+        rawPhoto:
+          $ref: '#/components/schemas/RawPhotoDetails'
+        message:
+          type: string
+          example: Raw photo details retrieved successfully
+    PhotoDetails:
+      type: object
+      required:
+        - id
+        - rawPhotoId
+        - userId
+        - filename
+        - originalUrl
+        - thumbnailUrl
+        - fileSize
+        - mimeType
+        - uploadedAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the photo
+          example: photo_123456
+        rawPhotoId:
+          type: string
+          description: Reference to the raw photo
+          example: raw_photo_789
+        userId:
+          type: string
+          description: User who uploaded the photo
+          example: user_456
+        filename:
+          type: string
+          description: Processed filename
+          example: processed_photo_123456.jpg
+        originalUrl:
+          type: string
+          format: uri
+          description: URL to the original processed photo
+          example: https://example.com/photos/processed_photo_123456.jpg
+        thumbnailUrl:
+          type: string
+          format: uri
+          description: URL to the thumbnail version
+          example: https://example.com/thumbnails/thumb_photo_123456.jpg
+        caption:
+          type: string
+          description: Photo caption
+          example: Beautiful sunset
+        tags:
+          type: array
+          items:
+            type: string
+          description: Photo tags
+          example: ["sunset", "nature"]
+        fileSize:
+          type: integer
+          format: int64
+          description: File size in bytes
+          example: 2048576
+        mimeType:
+          type: string
+          description: MIME type of the photo
+          example: image/jpeg
+        width:
+          type: integer
+          description: Photo width in pixels
+          example: 1920
+        height:
+          type: integer
+          description: Photo height in pixels
+          example: 1080
+        uploadedAt:
+          type: string
+          format: date-time
+          description: Timestamp when photo was uploaded
+          example: 2024-01-01T12:00:00Z
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when photo was last updated
+          example: 2024-01-01T12:00:00Z
+        scheduleDeletion:
+          type: string
+          format: date-time
+          description: Scheduled deletion timestamp
+          example: 2024-02-01T12:00:00Z
+    RawPhotoDetails:
+      type: object
+      required:
+        - id
+        - userId
+        - originalFilename
+        - storageUrl
+        - fileSize
+        - mimeType
+        - md5Hash
+        - uploadedAt
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the raw photo
+          example: raw_photo_123456
+        userId:
+          type: string
+          description: User who uploaded the photo
+          example: user_456
+        originalFilename:
+          type: string
+          description: Original filename from upload
+          example: IMG_20240101_120000.jpg
+        storageUrl:
+          type: string
+          format: uri
+          description: URL to the raw photo in storage
+          example: https://storage.example.com/raw/raw_photo_123456.jpg
+        fileSize:
+          type: integer
+          format: int64
+          description: File size in bytes
+          example: 5242880
+        mimeType:
+          type: string
+          description: MIME type of the photo
+          example: image/jpeg
+        md5Hash:
+          type: string
+          description: MD5 hash of the file
+          example: 5d41402abc4b2a76b9719d911017c592
+        width:
+          type: integer
+          description: Photo width in pixels
+          example: 4032
+        height:
+          type: integer
+          description: Photo height in pixels
+          example: 3024
+        exifData:
+          type: object
+          description: EXIF metadata from the photo
+          example: {"camera": "iPhone 15", "iso": 100, "aperture": "f/1.8"}
+        uploadedAt:
+          type: string
+          format: date-time
+          description: Timestamp when photo was uploaded
+          example: 2024-01-01T12:00:00Z
+        processedAt:
+          type: string
+          format: date-time
+          description: Timestamp when photo was processed
+          example: 2024-01-01T12:01:00Z
+        scheduleDeletion:
+          type: string
+          format: date-time
+          description: Scheduled deletion timestamp
+          example: 2024-02-01T12:00:00Z

@@ -1,11 +1,9 @@
-package middleware
+package util
 
 import (
 	"context"
 	"log/slog"
 	"net/http"
-
-	"jelly/pkg/api/util"
 )
 
 func LogRequest(next http.Handler) http.Handler {
@@ -28,7 +26,7 @@ func LogRequest(next http.Handler) http.Handler {
 			)
 			slogWithReq.Info("Request")
 
-			ctx := context.WithValue(r.Context(), util.ContextLogger, slogWithReq)
+			ctx := context.WithValue(r.Context(), ContextLogger, slogWithReq)
 			next.ServeHTTP(w, r.WithContext(ctx))
 		},
 	)
@@ -40,7 +38,7 @@ func Recovery(next http.Handler) http.Handler {
 		func(w http.ResponseWriter, r *http.Request) {
 			defer func() {
 				if err := recover(); err != nil {
-					log, ok := r.Context().Value(util.ContextLogger).(*slog.Logger)
+					log, ok := r.Context().Value(ContextLogger).(*slog.Logger)
 					if !ok {
 						log = slog.Default()
 					}

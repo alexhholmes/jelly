@@ -7,4 +7,5 @@ const (
 	ErrMsgFileRequired        = "File is required"
 	ErrMsgFailedToReadFile    = "Failed to read file"
 	ErrMsgUnsupportedFileType = "Unsupported file type"
+	ErrMsgInvalidUUID         = "Invalid UUID format for ID"
 )
